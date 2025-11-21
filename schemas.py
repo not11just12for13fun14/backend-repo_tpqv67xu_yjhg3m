@@ -1,48 +1,31 @@
 """
-Database Schemas
+Database Schemas for TrenchSight
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model below represents a MongoDB collection. The collection name
+is the lowercase of the class name (e.g., PhotoSession -> "photosession").
 """
-
+from typing import Optional, List
 from pydantic import BaseModel, Field
-from typing import Optional
+from datetime import datetime
 
-# Example schemas (replace with your own):
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class PhotoSession(BaseModel):
+    site_name: str = Field(..., description="Name of the trench site")
+    date: str = Field(..., description="Session date in YYYY-MM-DD")
+    start_lat: float = Field(..., description="Start latitude")
+    start_lng: float = Field(..., description="Start longitude")
+    device: Optional[str] = Field(None, description="User agent/device info")
+    battery_level: Optional[float] = Field(None, ge=0, le=1, description="Battery level 0..1")
+    created_at: Optional[datetime] = None
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Photo(BaseModel):
+    session_id: str = Field(..., description="Associated PhotoSession ID")
+    seq: int = Field(..., ge=1, description="Sequence number of the photo")
+    lat: float = Field(..., description="Latitude of capture")
+    lng: float = Field(..., description="Longitude of capture")
+    tilt_deg: Optional[float] = Field(None, description="Device tilt/pitch in degrees")
+    heading_deg: Optional[float] = Field(None, description="Device azimuth/heading in degrees")
+    zoom: Optional[float] = Field(1.0, description="Camera zoom level if available")
+    filename: str = Field(..., description="Stored file name")
+    captured_at: datetime = Field(default_factory=datetime.utcnow)
